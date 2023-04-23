@@ -3,7 +3,6 @@ set -euo pipefail
 
 #Install docker
 apt update && apt install -y docker.io
-wait
 #Install k3s
 curl -sfL https://get.k3s.io | sh -
 # Install Flux CLI
@@ -28,7 +27,10 @@ kubectl wait --timeout=90s --for=condition=available deployment private-registry
 registry_name=$(kubectl -n registry get pod -o=jsonpath='{.items[0].metadata.name}')
 # Get the IP address of the pod
 registry_ip=$(kubectl -n registry get pod "$registry_name" -o=jsonpath='{.status.podIP}')
+
+#order to be able push/pull image from local machine
 echo "$registry_ip  registry" >>/etc/hosts
+
 cat << EOF > /etc/docker/daemon.json 
 {
   "insecure-registries": ["registry:5000"]
@@ -72,7 +74,10 @@ kubectl wait --timeout=90s --for=condition=available deployment gitserver -n flu
 pod_name=$(kubectl -n flux-system get pod -o=jsonpath='{.items[0].metadata.name}')
 # Get the IP address of the pod
 pod_ip=$(kubectl -n flux-system get pod "$pod_name" -o=jsonpath='{.status.podIP}')
+
+#only required for communication with pod from local machine
 echo "$pod_ip   gitserver" >>/etc/hosts
+
 # Bootstrap Flux
 flux bootstrap git \
   --url="ssh://git@gitserver/git-server/repos/cluster.git" \
