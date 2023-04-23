@@ -42,10 +42,6 @@ mkdir -p /root/.kube ./keys
 cp $key_dir/* ./keys
 
 
-
-#order to be able push/pull image from local machine
-
-
 docker build -t "registry:5000/gitserver:$timestamp" .
 
 # Push the Docker image to the Docker Hub
@@ -55,15 +51,8 @@ wait
 
 # [ -d "/root/.kube" ] && echo "Directory exists" || sleep 10mkdir /root/.kube
 cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
-export KUBECONFIG=/root/.kube/config
-wait 
-kubectl create ns flux-system
-# Create a Kubernetes secret with the generated SSH key
-kubectl -n flux-system create secret generic flux-git-key \
-  --from-file="$key_dir/id_rsa" \
-  --from-file="$key_dir/id_rsa.pub"
-wait 
 
+#tell k3s pull images from local registry rather than docker hub
 cat << EOF > /etc/rancher/k3s/registries.yaml
 mirrors:
   "registry:5000":
@@ -71,6 +60,15 @@ mirrors:
       - "http://registry:5000"
 EOF
 systemctl restart k3s
+
+export KUBECONFIG=/root/.kube/config
+wait 
+kubectl create ns flux-system
+# Create a Kubernetes secret with the generated SSH key 
+kubectl -n flux-system create secret generic flux-git-key \
+  --from-file="$key_dir/id_rsa" \
+  --from-file="$key_dir/id_rsa.pub"
+
 # Build a Docker image with the generated keys and tag it with the timestam
 # Update the deployment file with the new image tag
 sed -i "s/registry:5000\/gitserver:.*/registry:5000\/gitserver:$timestamp/" deployment.yaml 
@@ -82,7 +80,7 @@ pod_name=$(kubectl -n flux-system get pod -o=jsonpath='{.items[0].metadata.name}
 # Get the IP address of the pod
 pod_ip=$(kubectl -n flux-system get pod "$pod_name" -o=jsonpath='{.status.podIP}')
 
-#only required for communication with pod from local machine
+#only required for communicating with pod from local machine
 echo "$pod_ip   gitserver" >>/etc/hosts
 
 # Bootstrap Flux
