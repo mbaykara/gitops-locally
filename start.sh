@@ -8,7 +8,8 @@ wait
 curl -sfL https://get.k3s.io | sh -
 # Install Flux CLI
 wait 
-curl -s https://fluxcd.io/install.sh | sudo bash 
+curl -s https://fluxcd.io/install.sh | sudo bash
+wait 
 echo "Deploy OCI registry"
 kubectl create ns registry
 kubectl apply -f container-registry.yaml
