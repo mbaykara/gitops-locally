@@ -31,7 +31,7 @@ systemctl restart docker
 wait
 
 # Generate a timestamp for tagging the image and directory
-timestamp=$(date +%d%m%y)
+timestamp=$(date +%d%m%y%s)
 # Create a temporary directory for generating SSH keys
 key_dir=$(mktemp -d --suffix="$timestamp")
 
