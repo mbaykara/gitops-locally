@@ -64,7 +64,7 @@ EOF
 systemctl restart k3s
 # Build a Docker image with the generated keys and tag it with the timestam
 # Update the deployment file with the new image tag
-sed -i "s/registry:5000\/gitserver:.*/registry:5000\/gitserver:$timestamp/" deployment.yaml 
+sed -i "s/registry:5000\/gitserver:.*/registry:5000\/gitserver:$timestamp/" deployment-gitserver.yaml 
 kubectl apply -f deployment-gitserver.yaml
 kubectl wait --timeout=90s --for=condition=available deployment gitserver -n flux-system
  
