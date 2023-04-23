@@ -10,7 +10,7 @@ This is a sample example how to setup GitOps locally in few minutes.
 
 ### Tools
 
-- K3S
+- K3S or kind or kds or minikube(I am using k3s for this demo)
 - Flux V2
 - Docker (not strictly necessary if you have prebuilt image and stored ssh keys)
 
