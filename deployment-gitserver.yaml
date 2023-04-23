@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: gitserver
+  name: gitserver
+  namespace: flux-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gitserver
+  template:
+    metadata:
+      labels:
+        name: gitserver
+    spec:
+      containers:
+        - name: git
+          image: registry:5000/gitserver:394020-150423
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REPO
+              value: "cluster.git"
+            - name: TAR_URL
+              value: "https://github.com/mbaykara/apps/archive/refs/heads/main.tar.gz"
+          ports:
+            - containerPort: 22
+              name: ssh
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 22
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 22
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /git-server/repos
+              name: git-server-data
+            - mountPath: /git-server/keys
+              name: ssh-key
+      volumes:
+        - name: ssh-key
+          secret:
+            secretName: flux-git-key
+        - name: git-server-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: gitserver
+  name: gitserver
+  namespace: flux-system
+spec:
+  ports:
+    - name: ssh
+      port: 22
+      protocol: TCP
+      targetPort: ssh
+  selector:
+    name: gitserver
+  type: ClusterIP
